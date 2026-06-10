@@ -33,11 +33,11 @@ const EventSummary = () => (
           ))}
         </div>
       </motion.div>
-      <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="relative">
+      <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="relative flex justify-center">
         <img
           src={EVENT.posterUrl}
           alt={`${EVENT.name} poster`}
-          className="w-full max-h-[720px] object-contain rounded-2xl border border-teal-pale/40 shadow-[0_24px_60px_rgba(30,75,107,0.18)] bg-white"
+          className="w-full max-w-md max-h-[520px] object-contain rounded-2xl border border-teal-pale/40 shadow-[0_24px_60px_rgba(30,75,107,0.18)] bg-white transition-transform hover:scale-[1.02] duration-300"
         />
       </motion.div>
     </div>
