@@ -3,6 +3,11 @@ import dotenv from "dotenv";
 import express from "express";
 import nodemailer from "nodemailer";
 import QRCode from "qrcode";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -89,6 +94,11 @@ app.post("/send-registration-email", async (req, res) => {
   }
 });
 
+app.use(express.static(path.join(__dirname, "../dist")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../dist/index.html"));
+});
+
 app.listen(port, () => {
-  console.log(`Email server running on http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
