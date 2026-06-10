@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 import { CheckCircle2, ScanLine, ShieldAlert } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
@@ -28,47 +28,59 @@ const ScannerPage = () => {
   }, [volunteer]);
 
   useEffect(() => {
-    const scanner = new Html5QrcodeScanner(
-      "qr-reader",
-      {
-        fps: 10,
-        qrbox: { width: 260, height: 260 },
-        rememberLastUsedCamera: true,
-        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-      },
-      false,
-    );
+    const html5QrCode = new Html5Qrcode("qr-reader");
 
-    scanner.render(async (decodedText) => {
-      const now = Date.now();
-      if (lastScan.current.value === decodedText && now - lastScan.current.at < 2500) return;
-      lastScan.current = { value: decodedText, at: now };
+    const startScanner = async () => {
       try {
-        const response = await markAttendance(decodedText, volunteerRef.current, navigator.userAgent);
-        if (response.status === "success" && response.participant) {
-          setResult({
-            tone: "success",
-            title: `Welcome ${response.participant.name}`,
-            body: `USN: ${response.participant.usn}\nChecked In Successfully`,
-            time: formatDateTime(response.checked_in_at),
-          });
-        } else if (response.status === "duplicate") {
-          setResult({
-            tone: "duplicate",
-            title: "Attendance Already Recorded",
-            body: response.message,
-            time: formatDateTime(response.checked_in_at),
-          });
-        } else {
-          setResult({ tone: "invalid", title: "Invalid or Unregistered QR Code", body: response.message });
-        }
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 260, height: 260 },
+          },
+          async (decodedText) => {
+            const now = Date.now();
+            if (lastScan.current.value === decodedText && now - lastScan.current.at < 2500) return;
+            lastScan.current = { value: decodedText, at: now };
+            
+            try {
+              const response = await markAttendance(decodedText, volunteerRef.current, navigator.userAgent);
+              if (response.status === "success" && response.participant) {
+                setResult({
+                  tone: "success",
+                  title: `Welcome ${response.participant.name}`,
+                  body: `USN: ${response.participant.usn}\nChecked In Successfully`,
+                  time: formatDateTime(response.checked_in_at),
+                });
+              } else if (response.status === "duplicate") {
+                setResult({
+                  tone: "duplicate",
+                  title: "Attendance Already Recorded",
+                  body: response.message,
+                  time: formatDateTime(response.checked_in_at),
+                });
+              } else {
+                setResult({ tone: "invalid", title: "Invalid or Unregistered QR Code", body: response.message });
+              }
+            } catch (err) {
+              setResult({ tone: "invalid", title: "Invalid or Unregistered QR Code", body: err instanceof Error ? err.message : "Scan failed." });
+            }
+          },
+          () => {
+            // ignore frame read errors
+          }
+        );
       } catch (err) {
-        setResult({ tone: "invalid", title: "Invalid or Unregistered QR Code", body: err instanceof Error ? err.message : "Scan failed." });
+        console.error("Failed to start scanner", err);
       }
-    }, undefined);
+    };
+
+    startScanner();
 
     return () => {
-      scanner.clear().catch(() => undefined);
+      if (html5QrCode.isScanning) {
+        html5QrCode.stop().catch(() => undefined);
+      }
     };
   }, []);
 
