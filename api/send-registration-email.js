@@ -1,21 +1,5 @@
-import cors from "cors";
-import dotenv from "dotenv";
-import express from "express";
 import nodemailer from "nodemailer";
 import QRCode from "qrcode";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config();
-
-const app = express();
-const port = Number(process.env.EMAIL_SERVER_PORT || 5000);
-
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || "http://localhost:8080" }));
-app.use(express.json({ limit: "1mb" }));
 
 const event = {
   id: "coffee-alumni-2026",
@@ -25,27 +9,26 @@ const event = {
   venue: "IS Seminar Hall 2",
 };
 
-function createTransporter() {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    throw new Error("SMTP_USER and SMTP_PASS are required.");
+export default async function handler(req, res) {
+  // Add CORS headers to allow requests from the frontend
+  res.setHeader("Access-Control-Allow-Credentials", true);
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
+  res.setHeader("Access-Control-Allow-Headers", "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version");
+
+  if (req.method === "OPTIONS") {
+    res.status(200).end();
+    return;
   }
 
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-}
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-app.get("/health", (_req, res) => {
-  res.json({ ok: true });
-});
-
-app.post("/send-registration-email", async (req, res) => {
   try {
-    const { participant } = req.body;
+    // Vercel automatically parses JSON bodies
+    const { participant } = req.body || {};
+    
     if (!participant?.email || !participant?.name || !participant?.registration_code || !participant?.qr_data) {
       return res.status(400).json({ error: "Participant email, name, registration code, and QR data are required." });
     }
@@ -59,7 +42,14 @@ app.post("/send-registration-email", async (req, res) => {
       },
     });
 
-    const transporter = createTransporter();
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
     await transporter.sendMail({
       from: process.env.REGISTRATION_EMAIL_FROM || `Persona+ <${process.env.SMTP_USER}>`,
       to: participant.email,
@@ -88,17 +78,8 @@ app.post("/send-registration-email", async (req, res) => {
       ],
     });
 
-    res.json({ ok: true });
+    res.status(200).json({ ok: true });
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : "Email sending failed." });
   }
-});
-
-app.use(express.static(path.join(__dirname, "../dist")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../dist/index.html"));
-});
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+}
