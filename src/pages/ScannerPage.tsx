@@ -94,10 +94,7 @@ const ScannerPage = () => {
               Volunteer Scanner
             </div>
             <h1 className="text-4xl font-bold text-gradient">{EVENT.name} Check-In</h1>
-            <div className="space-y-2">
-              <Label className="font-bold text-teal">Checked In By</Label>
-              <Input value={volunteer} onChange={(event) => setVolunteer(event.target.value)} className="bg-white border-teal-pale/60" />
-            </div>
+
             {result && <ResultCard result={result} />}
           </div>
 
