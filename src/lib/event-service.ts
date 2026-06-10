@@ -58,7 +58,11 @@ export async function registerParticipant(input: RegistrationInput) {
   }
 
   const typedParticipant = participant as Participant;
-  await sendRegistrationEmail(typedParticipant);
+  try {
+    await sendRegistrationEmail(typedParticipant);
+  } catch (emailErr) {
+    console.error("Failed to send registration email, but participant was registered successfully:", emailErr);
+  }
   return typedParticipant;
 }
 
@@ -75,6 +79,7 @@ export async function sendRegistrationEmail(participant: Participant) {
   if (!response.ok) {
     const payload = await response.json().catch(() => null);
     console.warn(payload?.error || "Registration email could not be sent.");
+    throw new Error(payload?.error || "Registration email could not be sent.");
   }
 }
 

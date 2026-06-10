@@ -72,7 +72,27 @@ const Navbar = () => {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8 font-medium text-foreground">
             {navItems.map((item) => (
-              <Link key={item.to} to={item.to} className="hover:text-teal transition-colors">{item.label}</Link>
+              item.to.startsWith("/#") ? (
+                <a 
+                  key={item.to} 
+                  href={item.to} 
+                  onClick={(e) => {
+                    if (window.location.pathname === "/") {
+                      e.preventDefault();
+                      const element = document.querySelector(item.to.replace("/", ""));
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth" });
+                        window.history.pushState(null, "", item.to);
+                      }
+                    }
+                  }}
+                  className="hover:text-teal transition-colors"
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link key={item.to} to={item.to} className="hover:text-teal transition-colors">{item.label}</Link>
+              )
             ))}
             {session && (
               <button type="button" onClick={logout} className="inline-flex items-center gap-2 hover:text-teal transition-colors">
@@ -103,9 +123,30 @@ const Navbar = () => {
             className="fixed inset-0 z-[7900] bg-white pt-24 px-6 md:hidden flex flex-col gap-6 font-medium text-lg text-foreground border-b border-teal-pale/40"
           >
             {navItems.map((item) => (
-              <Link key={item.to} to={item.to} onClick={closeMenu} className="hover:text-teal transition-colors py-2 border-b border-teal-pale/20">
-                {item.label}
-              </Link>
+              item.to.startsWith("/#") ? (
+                <a 
+                  key={item.to} 
+                  href={item.to} 
+                  onClick={(e) => {
+                    closeMenu();
+                    if (window.location.pathname === "/") {
+                      e.preventDefault();
+                      const element = document.querySelector(item.to.replace("/", ""));
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth" });
+                        window.history.pushState(null, "", item.to);
+                      }
+                    }
+                  }}
+                  className="hover:text-teal transition-colors py-2 border-b border-teal-pale/20"
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link key={item.to} to={item.to} onClick={closeMenu} className="hover:text-teal transition-colors py-2 border-b border-teal-pale/20">
+                  {item.label}
+                </Link>
+              )
             ))}
             {session && (
               <button type="button" onClick={logout} className="text-left hover:text-teal transition-colors py-2 border-b border-teal-pale/20">

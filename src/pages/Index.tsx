@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Coffee, Mail, Phone, User, BadgeCheck } from "lucide-react";
+import { Coffee, Mail, Phone, User, BadgeCheck, Loader2, XCircle } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import EventSummary from "@/components/EventSummary";
 import { Button } from "@/components/ui/button";
@@ -55,15 +55,27 @@ const Index = () => {
             viewport={{ once: true }}
             className="glass-card-strong glow-border rounded-2xl p-6 sm:p-8 space-y-5"
           >
-            {error && <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm font-semibold text-destructive">{error}</div>}
+            {error && (
+              <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+                <XCircle className="mt-0.5 shrink-0 text-red-500" size={18} />
+                <p className="text-sm font-semibold text-red-700">{error}</p>
+              </div>
+            )}
             <div className="grid sm:grid-cols-2 gap-4">
               <Field icon={<User size={18} />} label="Full Name" value={form.name} onChange={(name) => setForm({ ...form, name })} />
               <Field icon={<BadgeCheck size={18} />} label="USN" value={form.usn} onChange={(usn) => setForm({ ...form, usn })} />
               <Field icon={<Mail size={18} />} label="Email Address" type="email" value={form.email} onChange={(email) => setForm({ ...form, email })} />
               <Field icon={<Phone size={18} />} label="Phone Number" value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
             </div>
-            <Button disabled={loading} className="btn-primary w-full rounded-full h-12 text-base">
-              {loading ? "Registering..." : "Register and Generate QR"}
+            <Button disabled={loading} className="btn-primary w-full rounded-full h-12 text-base transition-all hover:scale-[1.02] active:scale-95 hover:shadow-[0_0_20px_rgba(45,115,115,0.4)]">
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Registering...
+                </>
+              ) : (
+                "Register and Generate QR"
+              )}
             </Button>
           </motion.form>
         </div>
@@ -83,7 +95,7 @@ type FieldProps = {
 const Field = ({ label, value, onChange, icon, type = "text" }: FieldProps) => (
   <div className="space-y-2">
     <Label className="flex items-center gap-2 text-teal font-bold">{icon}{label}</Label>
-    <Input required type={type} value={value} onChange={(event) => onChange(event.target.value)} className="h-12 bg-white border-teal-pale/60" />
+    <Input required type={type} value={value} onChange={(event) => onChange(event.target.value)} className="h-12 bg-white/40 backdrop-blur-sm border border-teal/30 focus:bg-white/80 focus:border-teal/60 focus:ring-2 focus:ring-teal/30 transition-all rounded-xl shadow-sm hover:bg-white/60 text-slate-900 placeholder:text-slate-500 font-medium" />
   </div>
 );
 
